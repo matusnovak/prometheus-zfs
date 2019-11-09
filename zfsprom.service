@@ -1,0 +1,9 @@
+[Unit]
+Description=Zfs Prometheus metrics
+
+[Service]
+ExecStart=/var/lib/homelab/zfsprom.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
