@@ -2,7 +2,8 @@
 Description=Zfs Prometheus metrics
 
 [Service]
-ExecStart=/var/lib/homelab/zfsprom.py
+Environment="ZPOOL_SCRIPTS_AS_ROOT=1"
+ExecStart=/var/lib/zfsprom/zfsprom.py
 Restart=always
 
 [Install]
