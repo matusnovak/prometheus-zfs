@@ -1,0 +1,9 @@
+version: '3'
+services:
+  zfs-metrics:
+    build: ./
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - 9901:9901
+
