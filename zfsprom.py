@@ -84,17 +84,35 @@ def iostat(metrics):
             bw_write = parseCapacitySmall(tokens[6])
 
             if alloc:
-                metrics['alloc'].labels(label).set(alloc)
+                metrics['alloc'].labels(
+                    source=label,
+                    pool=levels[0]
+                ).set(alloc)
             if free:
-                metrics['free'].labels(label).set(free)
+                metrics['free'].labels(
+                    source=label,
+                    pool=levels[0]
+                ).set(free)
             if op_read:
-                metrics['op_read'].labels(label).set(op_read)
+                metrics['op_read'].labels(
+                    source=label,
+                    pool=levels[0]
+                ).set(op_read)
             if op_write:
-                metrics['op_write'].labels(label).set(op_write)
+                metrics['op_write'].labels(
+                    source=label,
+                    pool=levels[0]
+                ).set(op_write)
             if bw_read:
-                metrics['bw_read'].labels(label).set(bw_read)
+                metrics['bw_read'].labels(
+                    source=label,
+                    pool=levels[0]
+                ).set(bw_read)
             if bw_write:
-                metrics['bw_write'].labels(label).set(bw_write)
+                metrics['bw_write'].labels(
+                    source=label,
+                    pool=levels[0]
+                ).set(bw_write)
 
 
 def getspace(metrics):
@@ -107,17 +125,20 @@ def getspace(metrics):
 
             if prop == 'available':
                 available = parseCapacity(tokens[2])
-                metrics['space_available'].labels(label).set(available)
+                metrics['space_available'].labels(
+                    source=label
+                ).set(available)
 
             if prop == 'used':
                 used = parseCapacity(tokens[2])
-                metrics['space_used'].labels(label).set(used)
+                metrics['space_used'].labels(
+                    source=label
+                ).set(used)
 
 
 def status(metrics):
     results = run(['zpool', 'status', '-c', 'serial,upath'])
     header = False
-    levels = []
     for result in results.split('\n'):
         if result.strip().startswith('NAME'):
             header = True
@@ -148,27 +169,97 @@ def status(metrics):
                 ).set(int(tokens[4]))
 
 
+def status2(metrics):
+    results = run(['zpool', 'status', '-c', 'serial,upath'])
+    header = False
+    header_offset = 0
+    levels = []
+    for result in results.split('\n'):
+        if result.strip().startswith('NAME'):
+            header = True
+            for c in result:
+                if c == ' ':
+                    header_offset += 1
+                else:
+                    break
+            continue
+
+        elif header:
+            tokens = result.split()
+            
+            if len(tokens) != 5 and len(tokens) != 7:
+                continue
+
+            # Count spaces
+            spaces = 0
+            for c in result:
+                if c == '\t':
+                    continue
+                elif c == ' ':
+                    spaces += 1
+                else:
+                    break
+
+            spaces -= header_offset
+            level = int(spaces / 2)
+
+            if len(levels) <= level:
+                levels.append(tokens[0])
+            if len(levels) > level + 1:
+                levels.pop()
+            levels[level] = tokens[0]
+            label = '_'.join(levels)
+
+            if len(tokens) >= 7:
+                metrics['status_state'].labels(
+                    pool=levels[0],
+                    source=tokens[0],
+                    serial=tokens[5],
+                    upath=tokens[6]
+                ).state(tokens[1])
+                metrics['status_read'].labels(
+                    pool=levels[0],
+                    source=tokens[0],
+                    serial=tokens[5],
+                    upath=tokens[6]
+                ).set(int(tokens[2]))
+                metrics['status_write'].labels(
+                    pool=levels[0],
+                    source=tokens[0],
+                    serial=tokens[5],
+                    upath=tokens[6]
+                ).set(int(tokens[3]))
+                metrics['status_cksum'].labels(
+                    pool=levels[0],
+                    source=tokens[0],
+                    serial=tokens[5],
+                    upath=tokens[6]
+                ).set(int(tokens[4]))
+            
+
+
+
 def collect(metrics):
     iostat(metrics)
     getspace(metrics)
-    status(metrics)
+    status2(metrics)
 
 
 def main():
     start_http_server(9901)
     metrics = {
-        'alloc': Gauge('zfsprom_iostat_alloc', 'Allocated space', ['source']),
-        'free': Gauge('zfsprom_iostat_free', 'Free space', ['source']),
-        'op_read': Gauge('zfsprom_iostat_op_read', 'Operations read in GB', ['source']),
-        'op_write': Gauge('zfsprom_iostat_op_write', 'Operations read in GB', ['source']),
-        'bw_read': Gauge('zfsprom_iostat_bw_read', 'Bandwidth read in MB', ['source']),
-        'bw_write': Gauge('zfsprom_iostat_bw_write', 'Bandwidth write in MB', ['source']),
+        'alloc': Gauge('zfsprom_iostat_alloc', 'Allocated space', ['source', 'pool']),
+        'free': Gauge('zfsprom_iostat_free', 'Free space', ['source', 'pool']),
+        'op_read': Gauge('zfsprom_iostat_op_read', 'Operations read in GB', ['source', 'pool']),
+        'op_write': Gauge('zfsprom_iostat_op_write', 'Operations read in GB', ['source', 'pool']),
+        'bw_read': Gauge('zfsprom_iostat_bw_read', 'Bandwidth read in MB', ['source', 'pool']),
+        'bw_write': Gauge('zfsprom_iostat_bw_write', 'Bandwidth write in MB', ['source', 'pool']),
         'space_available': Gauge('zfsprom_space_available', 'Space available in GB', ['source']),
         'space_used': Gauge('zfsprom_space_used', 'Space used in GB', ['source']),
-        'status_state': Enum('zfsprom_status_state', 'Disk status', ['source', 'serial', 'upath'], states=['ONLINE', 'DEGRADED', 'FAULTED', 'OFFLINE', 'UNAVAIL', 'REMOVED']),
-        'status_read': Gauge('zfsprom_status_read', 'Read errors', ['source', 'serial', 'upath']),
-        'status_write': Gauge('zfsprom_status_write', 'Write errors', ['source', 'serial', 'upath']),
-        'status_cksum': Gauge('zfsprom_status_cksum', 'Checksum errors', ['source', 'serial', 'upath']),
+        'status_state': Enum('zfsprom_status_state', 'Disk status', ['source', 'serial', 'upath', 'pool'], states=['ONLINE', 'DEGRADED', 'FAULTED', 'OFFLINE', 'UNAVAIL', 'REMOVED']),
+        'status_read': Gauge('zfsprom_status_read', 'Read errors', ['source', 'serial', 'upath', 'pool']),
+        'status_write': Gauge('zfsprom_status_write', 'Write errors', ['source', 'serial', 'upath', 'pool']),
+        'status_cksum': Gauge('zfsprom_status_cksum', 'Checksum errors', ['source', 'serial', 'upath', 'pool']),
     }
 
     start_time = time.time()
@@ -178,7 +269,6 @@ def main():
             start_time = time.time()
             collect(metrics)
         time.sleep(0.1)
-
 
 if __name__ == '__main__':
     main()
