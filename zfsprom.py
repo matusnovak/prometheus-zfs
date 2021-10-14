@@ -34,12 +34,13 @@ def recursive_children(metrics: dict, pool: str, source: str, vdev: libzfs.ZFSVd
         metrics['errors_cksum'].labels(**labels).set(errors_checksum)
         metrics['status'].labels(**labels).state(child.status)
 
-        if child.type != 'disk':
-            allocated = stats.allocated
-            free = stats.size - allocated
+        allocated = stats.allocated
+        free = stats.size - allocated
 
-            metrics['alloc'].labels(**labels).set(allocated)
-            metrics['free'].labels(**labels).set(free)
+        metrics['alloc'].labels(**labels).set(allocated)
+        metrics['free'].labels(**labels).set(free)
+
+        if child.type != 'disk':
             metrics['size'].labels(**labels).set(child.size)
 
         metrics['op_read'].labels(**labels).set(ops_read)
@@ -64,6 +65,15 @@ def collect(metrics: dict):
 
         metrics['active'].labels(**labels).state(pool.state.name)
         metrics['status'].labels(**labels).state(pool.status)
+
+        stats = pool.root_vdev.stats
+
+        allocated = stats.allocated
+        free = stats.size - allocated
+
+        metrics['alloc'].labels(**labels).set(allocated)
+        metrics['free'].labels(**labels).set(free)
+
         recursive_children(metrics, pool.name, pool.name, pool.root_vdev)
 
 
