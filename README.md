@@ -35,6 +35,12 @@ The [node-exporter](https://github.com/prometheus/node_exporter) for Prometheus 
 7. Run `systemctl enable zfsprom` and `systemctl start zfsprom`
 8. Your metrics will now be available at `http://localhost:9901`
 
+## Ports
+
+### FreeBSD
+
+* <https://www.freshports.org/sysutils/py-prometheus-zfs> thanks to [@0mp](https://github.com/0mp)
+
 ## Docker Usage
 
 ```yml
