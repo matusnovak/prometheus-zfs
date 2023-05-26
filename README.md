@@ -2,7 +2,7 @@
 
 ![build](https://github.com/matusnovak/prometheus-zfs/workflows/build/badge.svg)
 
-This is a simple exporter for the [Prometheus metrics](https://prometheus.io/) for [zfs](https://zfsonlinux.org/) by utilizing [py-libzfs](https://github.com/truenas/py-libzfs). The script `zfsprom.py` also comes with `zfsprom.service` so that you can run this script in the background on your Linux OS via `systemctl`. The script will use port `9901`, you can change it by changing it directly in the script.
+This is a simple exporter for the [Prometheus metrics](https://prometheus.io/) for [zfs](https://zfsonlinux.org/) by utilizing [py-libzfs](https://github.com/truenas/py-libzfs). The script `zfsprom.py` also comes with `zfsprom.service` so that you can run this script in the background on your Linux OS via `systemctl`. The script will listen on `0.0.0.0:9901` by default. You can use the `--port` and `--addr` command line flags to change this.
 
 This python script only exports the following metrics:
   * active - Enum, zfsprom_active, Active state (ACTIVE, EXPORTED, DESTROYED, etc...)
