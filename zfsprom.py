@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import time
 from prometheus_client import start_http_server, Gauge, Enum
 import libzfs
@@ -78,7 +79,11 @@ def collect(metrics: dict):
 
 
 def main():
-    start_http_server(9901)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-port', '--listen-port', dest='listen_port', type=int, default=9901, help="Port to listen on")
+    parser.add_argument('-addr', '--listen-address', dest='listen_address', type=str, default="0.0.0.0", help="Address to listen on")
+    args = parser.parse_args()
+    start_http_server(args.listen_port, addr=args.listen_address)
 
     labels = ['source', 'pool', 'type', 'path']
 
