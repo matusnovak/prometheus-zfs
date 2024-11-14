@@ -2,6 +2,8 @@
 
 ![build](https://github.com/matusnovak/prometheus-zfs/workflows/build/badge.svg)
 
+**NOTE!!!** This project is currently unable to be built due to a newer Cython and compilation issues as stated in https://github.com/truenas/py-libzfs/issues/249 . I highly recommend using **zpool_influxdb** instead!
+
 This is a simple exporter for the [Prometheus metrics](https://prometheus.io/) for [zfs](https://zfsonlinux.org/) by utilizing [py-libzfs](https://github.com/truenas/py-libzfs). The script `zfsprom.py` also comes with `zfsprom.service` so that you can run this script in the background on your Linux OS via `systemctl`. The script will listen on `0.0.0.0:9901` by default. You can use the `--port` and `--addr` command line flags to change this.
 
 This python script only exports the following metrics:
