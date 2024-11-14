@@ -99,7 +99,7 @@ def main():
         'errors_read': Gauge('zfsprom_errors_read', 'Read errors', labels),
         'errors_write': Gauge('zfsprom_errors_write', 'Write errors', labels),
         'errors_cksum': Gauge('zfsprom_errors_cksum', 'Checksum errors', labels),
-        'status': Enum('zfsprom_disk_status', 'Disk status', labels, states=['ONLINE', 'CLOSED', 'OFFLINE', 'REMOVED', 'CANT_OPEN', 'FAULTED', 'DEGRADED', 'HEALTHY']),
+        'status': Enum('zfsprom_disk_status', 'Disk status', labels, states=['ONLINE', 'CLOSED', 'OFFLINE', 'REMOVED', 'CANT_OPEN', 'FAULTED', 'DEGRADED', 'HEALTHY', 'UNAVAIL']),
     }
 
     collect(metrics)
